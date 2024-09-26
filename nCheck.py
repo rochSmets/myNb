@@ -2,17 +2,16 @@ import os
 
 import pyphare.pharein as ph
 from pyphare.simulator.simulator import Simulator
-from pyphare.pharesee.hierarchy.fromh5 import get_times_from_h5
 from pyphare.pharesee.run import Run
+
+from pyphare.pharein import global_vars
+from tests.diagnostic import all_timestamps
 
 from pyphare.pharein.diagnostics import FluidDiagnostics
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
-from scipy.optimize import curve_fit
-from scipy.signal import find_peaks
-
 
 mpl.use("Agg")
 
@@ -33,11 +32,14 @@ def config():
         },
     )
 
+    L = sim.simulation_domain()[0]
+
     def densityMain(x):
         return 1.0
 
     def densityBeam(x):
-        return 0.1
+        u = x/L-0.5
+        return np.exp(-u**2)
 
     def bx(x):
         return 1.0
@@ -67,46 +69,34 @@ def config():
         bx=bx,
         by=by,
         bz=bz,
-        main={"mass": 1, "charge": 1, "density": densityMain, **v_pop},
-        beam={"mass": 1, "charge": 1, "density": densityBeam, **v_pop},
+        main={"mass": 2, "charge": 1, "density": densityMain, **v_pop},
+        beam={"mass": 3, "charge": 2, "density": densityBeam, **v_pop},
     )
 
     ph.ElectronModel(closure="isothermal", Te=0.0)
 
-    for quantity in ["density", "charge_density"]:
+    timestamps = all_timestamps(global_vars.sim)
+
+    for quantity in ["charge_density", "'mass_density"]:
         FluidDiagnostics(
-            quantity=quantity, write_timestamps=np.zeros(time_step_nbr)
+            quantity=quantity,
+            write_timestamps=timestamps
         )
 
     poplist = ["main", "beam"]
     for pop in poplist:
-        for quantity in ["density", "charge_density", "mass_density"]:
+        for quantity in ["density", "charge_density"]:
             FluidDiagnostics(
                 quantity=quantity,
-                write_timestamps=np.zeros(time_step_nbr),
+                write_timestamps=timestamps,
                 population_name=pop,
             )
 
     return sim
 
 
-def get_hierarchies(run_path):
-    r = Run(run_path)
-
-    N_hier = r.GetNi(0.0)
-
-    return N_hier
-
-
 def main():
-    from pybindlibs.cpp import mpi_rank
-
     Simulator(config()).run()
-
-    if mpi_rank() == 0:
-        n_hier = get_hierarchies( os.path.join(os.curdir, "nCheck") )
-
-        assert np.fabs(0.01) < 0.1
 
 
 if __name__ == "__main__":

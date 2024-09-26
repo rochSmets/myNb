@@ -1,0 +1,2 @@
+failed to run cli command hwloc-info
+error /bin/sh: line 1: hwloc-info: command not found
