@@ -28,11 +28,12 @@ def config():
         dl=0.2,
         diag_options={
             "format": "phareh5",
-            "options": {"dir": "nCheck", "mode": "overwrite"},
+            "options": {"dir": "nCheck_1d", "mode": "overwrite"},
         },
     )
 
     L = sim.simulation_domain()[0]
+    print(L)
 
     def densityMain(x):
         return 1.0
@@ -77,7 +78,7 @@ def config():
 
     timestamps = all_timestamps(global_vars.sim)
 
-    for quantity in ["charge_density", "'mass_density"]:
+    for quantity in ["charge_density", "mass_density"]:
         FluidDiagnostics(
             quantity=quantity,
             write_timestamps=timestamps
