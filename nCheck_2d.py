@@ -23,37 +23,41 @@ def config():
         largest_patch_size=60,
         time_step=0.01,
         time_step_nbr=1,
-        boundary_types="periodic",
-        cells=100,
-        dl=0.2,
+        boundary_types=("periodic", "periodic"),
+        cells=(100, 100),
+        dl=(0.2, 0.2),
         diag_options={
             "format": "phareh5",
-            "options": {"dir": "nCheck_1d", "mode": "overwrite"},
+            "options": {"dir": "nCheck_2d", "mode": "overwrite"},
         },
     )
 
-    L = sim.simulation_domain()[0]
+    Lx = sim.simulation_domain()[0]
+    Ly = sim.simulation_domain()[1]
 
-    def densityMain(x):
+    def densityMain(x, y):
+        assert len(x) == len(y)
+        return 1.0*np.ones_like(x)
+
+    def densityBeam(x, y):
+        assert len(x) == len(y)
+        u = x/Lx-0.5
+        v = y/Ly-0.5
+        return np.exp(-u**2-v**2)
+
+    def bx(x, y):
         return 1.0
 
-    def densityBeam(x):
-        u = x/L-0.5
-        return np.exp(-u**2)
-
-    def bx(x):
-        return 1.0
-
-    def by(x):
+    def by(x, y):
         return 0.0
 
-    def bz(x):
+    def bz(x, y):
         return 0.0
 
-    def v0(x):
+    def v0(x, y):
         return 0.0
 
-    def vth(x):
+    def vth(x, y):
         return np.sqrt(1.0)
 
     v_pop = {
